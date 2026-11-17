@@ -47,9 +47,9 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 20
         resources:
-          requests:
-            cpu: "1"
-            memory: "2Gi"
+          requests:              # 一個帳號開四個工具約用 2 GiB；見 docs/workspace-mode.md
+            cpu: 400m
+            memory: "1Gi"
           limits:
             cpu: "4"
             memory: "4Gi"
@@ -77,8 +77,8 @@ spec:
           value: /etc/workspace/users
         resources:
           requests:
-            cpu: 500m
-            memory: "1Gi"
+            cpu: 200m
+            memory: "512Mi"
           limits:
             cpu: "4"
             memory: "4Gi"
@@ -95,8 +95,8 @@ spec:
           value: /etc/workspace/users
         resources:
           requests:
-            cpu: 500m
-            memory: "1Gi"
+            cpu: 200m
+            memory: "512Mi"
           limits:
             cpu: "4"
             memory: "4Gi"
