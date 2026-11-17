@@ -7,7 +7,6 @@ kind: Kustomization
 namespace: web-workspace
 resources:
 - namespace.yaml
-- pvc.yaml
 - deployment.yaml
 - service.yaml
 secretGenerator:

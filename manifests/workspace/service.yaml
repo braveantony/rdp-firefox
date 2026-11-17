@@ -10,4 +10,4 @@ spec:
   - name: rdp
     port: 3389
     targetPort: rdp
-    nodePort: 30392
+    nodePort: 30389
