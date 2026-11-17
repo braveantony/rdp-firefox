@@ -23,7 +23,7 @@ PNG 使用 WenQuanYi Zen Hei（文泉驛正黑）字型，檢視時不需要另�
 - `web-workspace` 與 `taroko` 兩個 namespace 各畫成一個完整的矩形。`tkadm.taroko` 是預設的 SSH 目標，本 repo 不提供 tkadm 的部署清單。
 - Secret 名稱由 overlay 加上內容雜湊。
 - 粗藍線是從用戶端經 RDP 進入 Firefox 桌面的主路徑。Firefox 方塊畫在 Xorg session 裡，表示 Firefox 在該桌面內全螢幕執行。從 Firefox 出發的綠線，表示在 Firefox 裡開啟 `http://localhost:2200`／`2210` 的 Web 終端機。
-- Pod 內只有一個 `desktop` container（虛線框），映像檔為 `ghcr.io/braveantony/rdp-firefox:3.7-share`。方塊右上角的標籤標明種類：`process` 是 process；② 標的是 `session`，代表由一組 process 組成的桌面工作階段。兩者都不是額外的 container。
+- Pod 內只有一個 `desktop` container（虛線框），映像檔為 `ghcr.io/braveantony/rdp-firefox:3.8-share`。方塊右上角的標籤標明種類：`process` 是 process；② 標的是 `session`，代表由一組 process 組成的桌面工作階段。兩者都不是額外的 container。
   - ①、④、⑤ 由 tini 與 `/opt/desktop/entrypoint.sh` 在 container 啟動時開啟。
   - ②、③ 在使用者登入時，由 xrdp-sesman 透過 `startwm.sh` 開啟。
 - process 以 ①～⑤ 編號，每個方塊的標題下方都有一行職責。

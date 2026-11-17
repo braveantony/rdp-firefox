@@ -86,18 +86,19 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 
 ## 版本比較
 
-| | v3.2 | v3.4-share | v3.5-share | v3.6-share | v3.7-share |
-| --- | --- | --- | --- | --- | --- |
-| 映像檔 | `ghcr.io/braveantony/rdp-firefox:3.2` | `ghcr.io/braveantony/rdp-firefox:3.4-share` | `ghcr.io/braveantony/rdp-firefox:3.5-share` | `ghcr.io/braveantony/rdp-firefox:3.6-share` | `ghcr.io/braveantony/rdp-firefox:3.7-share` |
-| 同一帳號多人同時登入、各自獨立桌面 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| localhost:2200／2210 Web 終端機 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 分享自己的桌面（操作 PIN／唯讀 PIN） | — | ✅ | ✅ | ✅ | ✅ |
-| 多個帳號（Secret 帳號檔案） | — | — | ✅ | ✅ | ✅ |
-| `curl \| bash` 安裝、Kustomize 部署 | — | — | ✅ | ✅ | ✅ |
-| 桌面內直接輸入中文（新酷音） | — | — | — | ✅ | ✅ |
-| 2210 免設定直連 tkadm（22100 埠）、設定多個帳號時詢問 SSH 帳號 | — | — | — | — | ✅ |
-| 映像檔大小 | 約 790 MB | 約 1.04 GB | 約 1.04 GB | 約 1.08 GB | 約 1.08 GB |
-| 原始碼 | branch [`release/3.2`](../../tree/release/3.2) | branch [`release/3.4-share`](../../tree/release/3.4-share) | branch [`release/3.5-share`](../../tree/release/3.5-share) | branch [`release/3.6-share`](../../tree/release/3.6-share) | branch [`release/3.7-share`](../../tree/release/3.7-share)（= `main`） |
+| | v3.2 | v3.4-share | v3.5-share | v3.6-share | v3.7-share | v3.8-share |
+| --- | --- | --- | --- | --- | --- | --- |
+| 映像檔 | `ghcr.io/braveantony/rdp-firefox:3.2` | `ghcr.io/braveantony/rdp-firefox:3.4-share` | `ghcr.io/braveantony/rdp-firefox:3.5-share` | `ghcr.io/braveantony/rdp-firefox:3.6-share` | `ghcr.io/braveantony/rdp-firefox:3.7-share` | `ghcr.io/braveantony/rdp-firefox:3.8-share` |
+| 同一帳號多人同時登入、各自獨立桌面 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| localhost:2200／2210 Web 終端機 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 分享自己的桌面（操作 PIN／唯讀 PIN） | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 多個帳號（Secret 帳號檔案） | — | — | ✅ | ✅ | ✅ | ✅ |
+| `curl \| bash` 安裝、Kustomize 部署 | — | — | ✅ | ✅ | ✅ | ✅ |
+| 桌面內直接輸入中文（新酷音） | — | — | — | ✅ | ✅ | ✅ |
+| 2210 免設定直連 tkadm（22100 埠）、設定多個帳號時詢問 SSH 帳號 | — | — | — | — | ✅ | ✅ |
+| [工作區模式](docs/workspace-mode.md)（`RDP_MODE=workspace`） | — | — | — | — | — | ✅ |
+| 映像檔大小 | 約 790 MB | 約 1.04 GB | 約 1.04 GB | 約 1.08 GB | 約 1.08 GB | 約 1.12 GB |
+| 原始碼 | branch [`release/3.2`](../../tree/release/3.2) | branch [`release/3.4-share`](../../tree/release/3.4-share) | branch [`release/3.5-share`](../../tree/release/3.5-share) | branch [`release/3.6-share`](../../tree/release/3.6-share) | branch [`release/3.7-share`](../../tree/release/3.7-share) | branch [`release/3.8-share`](../../tree/release/3.8-share)（= `main`） |
 
 `images/rdp-firefox/Dockerfile` 用建置參數 `SESSION_SHARE` 區分是否加入分享功能：`SESSION_SHARE=1` 建出 `-share` 版；`SESSION_SHARE=0`（預設）建出不含分享功能的版本（此版本未另外發布映像檔）。各版本的差異說明見 [Releases](../../releases)。
 
@@ -106,7 +107,7 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 - [install.md](docs/install.md)：安裝（先決條件、快速開始、多個帳號、更換映像檔、升級、移除）
 - [architecture.md](docs/architecture.md)：系統運作架構（連線路徑、Pod 內各 process 的職責、安全邊界）
 - [user-guide.md](docs/user-guide.md)：使用手冊（連線登入、Firefox 與中文、終端機、多人使用、分享與加入桌面、常見問題）
-- [workspace-mode.md](docs/workspace-mode.md)：工作區模式（一個桌面開啟 tkadm、VSCodium、JupyterLab；尚未發布）
+- [workspace-mode.md](docs/workspace-mode.md)：工作區模式（一個桌面開啟 tkadm、VSCodium、JupyterLab）
 - [build-image-v3.4.md](docs/build-image-v3.4.md)：從零建置 `:3.4` 與 `:3.4-share`，並部署到 Kubernetes（tk8s）的完整步驟
 - [build-image.md](docs/build-image.md)：v3.2（只有多人獨立桌面，沒有分享功能）的建置步驟
 
@@ -118,7 +119,7 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 | `RDP_USER` | `bigred` | 沒有帳號檔案時的登入帳號（UID 1000） |
 | `RDP_PASSWORD` | — | 沒有帳號檔案時的登入密碼（此時必填） |
 | `MAX_SESSIONS` | `4` | 可同時存在的桌面數上限；加入別人桌面的連線不占名額。`-share` 版只能分享編號 10～19 的桌面，設超過 10 時，多出來的桌面無法分享 |
-| `RDP_MODE` | `kiosk` | `kiosk`：登入後是全螢幕的 Firefox；`workspace`：[工作區模式](docs/workspace-mode.md)（尚未發布） |
+| `RDP_MODE` | `kiosk` | `kiosk`：登入後是全螢幕的 Firefox；`workspace`：[工作區模式](docs/workspace-mode.md) |
 | `DISCONNECTED_TIMEOUT` | `28800` | 只在工作區模式有效：斷線後桌面保留的秒數 |
 | `SSH_TARGET` | `tkadm.taroko` | `localhost:2210` 終端機的 SSH 目標。連 `tkadm.taroko` 時自動使用 22100 埠（`/etc/ssh/ssh_config.d/tkadm.conf`）；其他主機要指定埠號時寫成 `ssh://<主機>:<埠>` |
 
