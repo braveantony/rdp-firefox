@@ -75,7 +75,7 @@ tkadm 要另外部署，本 repo 不提供。VSCodium 要連到 tkadm，tkadm �
 
 ### 部署步驟
 
-只是想試用時，一行指令就能裝，帳號是預設的 `alice`／`ChangeMe-alice`、`bob`／`ChangeMe-bob`：
+只是想試用時，一行指令就能裝，帳號 `bigred`、密碼 `bigred`：
 
 ```bash
 kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspace?ref=main"

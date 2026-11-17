@@ -44,7 +44,7 @@ kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspac
 kubectl -n web-workspace get pod -w
 ```
 
-再用遠端桌面連線到 `<節點 IP>:30389`（節點 IP 用 `kubectl get nodes -o wide` 查）。預設有兩個帳號：`alice`／`ChangeMe-alice`、`bob`／`ChangeMe-bob`。
+再用遠端桌面連線到 `<節點 IP>:30389`（節點 IP 用 `kubectl get nodes -o wide` 查）。帳號 `bigred`、密碼 `bigred`。
 
 > 預設密碼是公開的，只適合測試。要改帳號密碼、Pod 停在 `Pending`（節點太小）、要在 Pod 重建後保留 `/home` 的檔案、或 tkadm 視窗連不上時，請見 [docs/workspace-mode.md 的「部署」](docs/workspace-mode.md#部署)。
 
