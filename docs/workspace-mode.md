@@ -195,14 +195,14 @@ kubectl apply -k my-workspace
 
 ## 環境變數
 
-[README 的環境變數](../README.md#環境變數)在工作區模式一樣有效。另外多兩個：
+[README 的環境變數](../README.md#configuration)在工作區模式一樣有效。另外多兩個：
 
 | 變數 | 預設值 | 說明 |
 | --- | --- | --- |
 | `RDP_MODE` | `kiosk` | `kiosk` 或 `workspace`；其他值會讓 container 停止，Pod log 印出 `invalid RDP_MODE` |
 | `DISCONNECTED_TIMEOUT` | `28800` | 只在工作區模式有效：斷線後桌面保留的秒數，逾時會關閉桌面和裡面的工具 |
 
-`MAX_SESSIONS` 在工作區模式代表同時存在的桌面數，也就是同時使用的帳號數。
+`MAX_SESSIONS` 在工作區模式代表同時存在的桌面數。一個帳號一個桌面，斷線後還在保留期間（`DISCONNECTED_TIMEOUT`）的桌面也算在內。
 
 ## 測試
 

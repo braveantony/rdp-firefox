@@ -29,7 +29,7 @@
 
 ## 2. 使用 Firefox
 
-- 畫面只有 Firefox，沒有工作列和桌面。Firefox 被關掉後會在 1 秒內自動重新開啟。
+- 畫面只有 Firefox，沒有工作列和桌面。Firefox 被關掉後，約 1 秒會自動重新開啟。
 - 解析度跟著你的遠端桌面視窗大小。
 - **輸入中文**：桌面內建新酷音（注音）輸入法。你電腦上的輸入法請保持英文，在遠端桌面裡**單獨按一下左 `Shift`**（或 `Ctrl+Space`）切換到注音，再按一次切回英文。按住 `Shift` 打大寫字母不會切換。你電腦上的中文輸入法打出的字傳不進遠端桌面。
 - **貼上**：在你的電腦複製後，到 Firefox 按 `Ctrl+V`（Mac 用 `Cmd+V`）貼上，中文也可以。
@@ -77,8 +77,16 @@
 
 1. 照第 1 節連到 `192.168.11.64`，出現 xrdp 登入畫面。
 2. **Session** 改選 `join<編號>`，例如 `join10`。可以用滑鼠點開選單選，也可以先點一下 Session 欄位再按 `↓` 鍵切換。選好後，表單只剩 **password** 一欄。
+
+   ![Session 選 join10](images/05-join-select.png)
+
 3. **password** 填對方給你的 PIN。
+
+   ![填入 PIN](images/06-join-pin.png)
+
 4. 按 OK，就會看到對方的畫面。
+
+   ![加入後看到對方的畫面](images/07-joined-view.png)
 
 > 不要在 username 填 `join10\<帳號>` 這類名稱：Session 仍是 `Xorg` 時，系統會把它當成帳號，回覆找不到使用者。
 
