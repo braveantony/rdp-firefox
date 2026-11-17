@@ -1,6 +1,6 @@
 # rdp-firefox
 
-用 Windows 遠端桌面（RDP）登入後，就能用全螢幕 Firefox 與 Web 終端機存取 Kubernetes 叢集內的服務。支援多人同時使用：每人各有獨立桌面，也能分享給別人觀看或共同操作。
+用 Windows 遠端桌面（RDP）登入後，就能用全螢幕 Firefox 與 Web 終端機存取 Kubernetes 叢集內的服務。支援多人同時使用：每人各有獨立桌面，也能分享給別人觀看或共同操作。另有[工作區模式](docs/workspace-mode.md)：登入一個桌面，就能開啟 tkadm、VSCodium、JupyterLab 三個工具。
 
 ## 簡述
 
@@ -11,6 +11,7 @@
 - **零安裝、即連即用**：Windows 內建遠端桌面一鍵連線，免裝任何用戶端或外掛，登入後即可使用全螢幕 Firefox
 - **多人並行、彼此隔離**：多個帳號、甚至同一帳號都能多人同時登入，每次登入都有自己的桌面、瀏覽器與下載目錄，每個終端機分頁也各有獨立的 shell，互不干擾
 - **中文輸入無縫接軌**：桌面內建新酷音（注音），按左 `Shift` 即可切換中英；也能從本機剪貼簿直接貼上
+- **一個桌面、三個工具**（工作區模式）：登入後是三張卡片，按一下就開啟 tkadm、VSCodium 或 JupyterLab；整個 Pod 只有一套 xrdp，重新連線會接回原本的桌面，安裝方式見[快速開始](#工作區模式)
 - **即時協作、權限分明**（`-share` 版）：一組 PIN 即可邀請他人加入你的桌面，唯讀觀摩或共同操作由你決定
 
 ## 架構
@@ -28,6 +29,24 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 腳本會部署到 namespace `web-workspace`，完成後印出每個節點的連線位址。用遠端桌面連線到 `<節點 IP>:30389`，帳號 `bigred`、密碼 `bigred`。
 
 先決條件、多個帳號（Kustomize）、更換映像檔、升級與移除，請見 [docs/install.md](docs/install.md)。
+
+### 工作區模式
+
+要用 tkadm、VSCodium、JupyterLab 三個工具時，改裝工作區模式。在已安裝 kubectl、且連得到目標 Kubernetes 叢集的電腦上執行：
+
+```bash
+kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspace?ref=main"
+```
+
+這行指令會部署到 namespace `web-workspace`（和上面的 kiosk 模式同一個，兩者可以並存）。等 Pod 變成 `3/3 Running`（第一次要下載三個映像檔，需要幾分鐘）：
+
+```bash
+kubectl -n web-workspace get pod -w
+```
+
+再用遠端桌面連線到 `<節點 IP>:30392`（節點 IP 用 `kubectl get nodes -o wide` 查）。預設有兩個帳號：`alice`／`ChangeMe-alice`、`bob`／`ChangeMe-bob`。
+
+> 預設密碼是公開的，只適合測試。要改帳號密碼、Pod 停在 `Pending`（節點太小或沒有預設的 StorageClass）、或 tkadm 視窗連不上時，請見 [docs/workspace-mode.md 的「部署」](docs/workspace-mode.md#部署)。
 
 ## 怎麼用
 
