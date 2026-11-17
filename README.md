@@ -111,11 +111,11 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 
 ## How It Works
 
-![rdp-firefox 系統運作架構](docs/architecture/rdp-firefox-architecture.png)
+![rdp-firefox 工作區模式的架構](docs/architecture/workspace-architecture.png)
 
 使用者以 RDP 連到任一節點的 NodePort `30389`，Service 把連線轉到 Pod 的 3389 埠，由 Pod 裡的 xrdp 接手。帳號密碼通過驗證後，xrdp 為這條連線啟動一個桌面，桌面裡的程式都在叢集內執行，所以能直接連到叢集內的服務。
 
-上圖是 kiosk 模式。Pod 內各個 process（執行中的程式）的職責與安全邊界，見 [docs/architecture.md](docs/architecture.md)；完整的操作說明見[使用手冊](docs/user-guide.md)。
+上圖是工作區模式，圖上的編號對應右側的步驟。kiosk 模式只有 `desktop` 這一個 container，它的架構圖、Pod 內各個 process（執行中的程式）的職責與安全邊界，見 [docs/architecture.md](docs/architecture.md)；完整的操作說明見[使用手冊](docs/user-guide.md)。
 
 ### 登入
 

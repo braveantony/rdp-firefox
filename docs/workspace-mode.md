@@ -45,7 +45,9 @@ tkadm 視窗是一個 Firefox，開啟 `localhost:2210` 的 Web 終端機（以 
 
 ## 怎麼運作
 
-一個 Pod 裡有三個 container，各用自己的映像檔：
+![工作區模式的架構](architecture/workspace-architecture.png)
+
+圖上的編號對應右側的步驟。一個 Pod 裡有三個 container，各用自己的映像檔：
 
 | container | 映像檔 | 模式 | 做什麼 |
 | --- | --- | --- | --- |
