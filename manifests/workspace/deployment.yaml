@@ -5,7 +5,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate          # every desktop lives in this one pod, and the home volume is ReadWriteOnce
+    type: Recreate          # every desktop lives in this one pod
   selector:
     matchLabels:
       app: workspace
@@ -106,9 +106,8 @@ spec:
         secret:
           secretName: workspace-users
           defaultMode: 0400
-      - name: home
-        persistentVolumeClaim:
-          claimName: workspace-home
+      - name: home             # 每個帳號的 home，三個 container 共用；Pod 重建就清空（要保留見 docs/workspace-mode.md）
+        emptyDir: {}
       - name: run              # 啟動服務的 socket；Pod 重啟就清空
         emptyDir: {}
       - name: dshm             # 預設 /dev/shm 只有 64MiB，Firefox 與 VSCodium 會崩潰

@@ -38,15 +38,15 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspace?ref=main"
 ```
 
-這行指令會部署到 namespace `web-workspace`（和上面的 kiosk 模式是同一個 namespace）。等 Pod 變成 `3/3 Running`（第一次要下載三個映像檔，需要幾分鐘）：
+這行指令會部署到 namespace `web-workspace`。它和上面的 kiosk 模式用同一個 NodePort（30389），同一個叢集只能裝其中一種。等 Pod 變成 `3/3 Running`（第一次要下載三個映像檔，需要幾分鐘）：
 
 ```bash
 kubectl -n web-workspace get pod -w
 ```
 
-再用遠端桌面連線到 `<節點 IP>:30392`（節點 IP 用 `kubectl get nodes -o wide` 查）。預設有兩個帳號：`alice`／`ChangeMe-alice`、`bob`／`ChangeMe-bob`。
+再用遠端桌面連線到 `<節點 IP>:30389`（節點 IP 用 `kubectl get nodes -o wide` 查）。帳號 `bigred`、密碼 `bigred`。
 
-> 預設密碼是公開的，只適合測試。要改帳號密碼、Pod 停在 `Pending`（節點太小或沒有預設的 StorageClass）、或 tkadm 視窗連不上時，請見 [docs/workspace-mode.md 的「部署」](docs/workspace-mode.md#部署)。
+> 預設密碼是公開的，只適合測試。要改帳號密碼、Pod 停在 `Pending`（節點太小）、要在 Pod 重建後保留 `/home` 的檔案、或 tkadm 視窗連不上時，請見 [docs/workspace-mode.md 的「部署」](docs/workspace-mode.md#部署)。
 
 ## 怎麼用
 
@@ -153,7 +153,7 @@ kubectl -n web-workspace get pod -w
 | `install.sh` | 快速開始的 `curl \| bash` 安裝腳本（帳號 bigred/bigred） |
 | `manifests/base/` | Kustomize base（共用的基本設定）：Namespace、Deployment、NodePort Service（30389） |
 | `manifests/multi-user/` | 多帳號 overlay（疊加在 base 上的修改）：由 `users.txt` 帳號清單產生 Secret |
-| `manifests/workspace/` | 工作區模式：一個 Pod 三個 container（rdp-firefox、rdp-vscode、rdp-jupyter），NodePort Service（30392） |
+| `manifests/workspace/` | 工作區模式：一個 Pod 三個 container（rdp-firefox、rdp-vscode、rdp-jupyter），NodePort Service（30389） |
 | `docs/` | 架構說明、使用手冊、建置文件、架構圖（`docs/architecture/`）與 README 截圖（`docs/images/`） |
 | `test/e2e/` | 在臨時 kind 叢集（用容器模擬的測試用 Kubernetes 叢集）上執行的端到端驗證腳本 |
 | `test/unit/`、`test/image/` | 工作區模式的測試：程式邏輯，以及在 podman pod 裡實際登入操作 |

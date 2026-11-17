@@ -19,7 +19,7 @@
 | 設定 | 不設定，或 `RDP_MODE=kiosk` | `RDP_MODE=workspace` |
 | 登入後看到 | 全螢幕的 Firefox | 三張卡片：tkadm、VSCodium、JupyterLab |
 | 桌面 | 每條連線一個，斷線 2 分鐘後關閉 | 每個帳號一個，重新連線會接回原本的桌面 |
-| home | 每條連線一個暫時的 home | 帳號自己的 `/home/<帳號>`，檔案會保留 |
+| home | 每條連線一個暫時的 home | 帳號自己的 `/home/<帳號>`，斷線、重新連線後檔案都還在；Pod 重建才會清空，見[保留 home 的檔案](#保留-home-的檔案) |
 | 分享桌面（`-share` 版） | 可以 | 不啟用，見[限制](#限制) |
 
 ## 怎麼用
@@ -68,14 +68,14 @@ tkadm 視窗是一個 Firefox，開啟 `localhost:2210` 的 Web 終端機（以 
 | 要確認的事 | 怎麼查 | 不符合時 |
 | --- | --- | --- |
 | 有一個節點放得下整個 Pod：三個 container 合計要求 2 核心、4 GiB 記憶體 | `kubectl describe nodes`，看每個節點的 `Allocatable` | Pod 停在 `Pending`，見[節點比較小時](#節點比較小時) |
-| 叢集有預設的 StorageClass（儲存類別，決定儲存空間由誰提供） | `kubectl get storageclass`，名稱後面有 `(default)` | PVC 和 Pod 都停在 `Pending`，見[節點比較小時](#節點比較小時)的範例 |
+| NodePort `30389` 沒有被占用（kiosk 模式用的也是這個埠，同一個叢集只能裝其中一種） | `kubectl get svc -A \| grep 30389` 沒有輸出 | `kubectl apply` 回報 `provided port is already allocated` |
 | tkadm 已經部署，`tkadm.taroko` 的 22100 埠連得到 | `kubectl -n taroko get pod,svc` | 桌面照常可用，但 tkadm 視窗連不上，VSCodium 也連不到 tkadm |
 
 tkadm 要另外部署，本 repo 不提供。VSCodium 要連到 tkadm，tkadm 的 sshd 還得允許埠轉發，見 rdp-vscode 的 README。
 
 ### 部署步驟
 
-只是想試用時，一行指令就能裝，帳號是預設的 `alice`／`ChangeMe-alice`、`bob`／`ChangeMe-bob`：
+只是想試用時，一行指令就能裝，帳號 `bigred`、密碼 `bigred`：
 
 ```bash
 kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspace?ref=main"
@@ -90,14 +90,14 @@ nano manifests/workspace/users.txt      # 一行一個「帳號:密碼」
 kubectl apply -k manifests/workspace
 ```
 
-連線位址是任一節點的 IP 加上 NodePort（Kubernetes 在每個節點上開放的固定埠號）`30392`。節點 IP 用 `kubectl get nodes -o wide` 查。Pod 要先變成 `3/3 Running`，用 `kubectl -n web-workspace get pod` 查。
+連線位址是任一節點的 IP 加上 NodePort（Kubernetes 在每個節點上開放的固定埠號）`30389`。節點 IP 用 `kubectl get nodes -o wide` 查。Pod 要先變成 `3/3 Running`，用 `kubectl -n web-workspace get pod` 查。
 
-移除時執行 `kubectl delete namespace web-workspace`。這會刪除 namespace 裡的所有資源，包含 `/home` 的資料（PVC `workspace-home`）；kiosk 模式也裝在同一個 namespace，會一起被刪除。
+移除時執行 `kubectl delete namespace web-workspace`。這會刪除 namespace 裡的所有資源，包含 `/home` 的檔案。
 
 三個 container 必須：
 
 - **讀同一份帳號檔案**。帳號的 UID 依檔案裡的順序從 1000 開始編，三邊要一致。
-- **掛載同一個 `/home`**（`workspace-home` 這個 PVC，Kubernetes 的儲存空間申請）。
+- **掛載同一個 `/home`**（預設是 `emptyDir`，跟著 Pod 存在的暫時空間）。
 - **掛載同一個 `/run/rdp-workspace`**。
 
 `manifests/workspace/kustomization.yaml` 的 `images` 記錄一起測試過的三個版本。
@@ -115,12 +115,6 @@ kind: Kustomization
 resources:
 - ../manifests/workspace
 patches:
-# 叢集沒有預設的 StorageClass 時，指定要用哪一個
-- target: {kind: PersistentVolumeClaim, name: workspace-home}
-  patch: |
-    - op: add
-      path: /spec/storageClassName
-      value: local-path
 # 調低三個 container 的資源要求與上限
 - target: {kind: Deployment, name: workspace}
   patch: |
@@ -144,7 +138,57 @@ patches:
 kubectl apply -k my-workspace
 ```
 
-`local-path` 換成 `kubectl get storageclass` 列出的名稱。這組數值在每個節點 1.5 核心、約 3 GiB 的叢集上實測可以執行，但只夠一個帳號：第二個帳號登入並開啟 VSCodium 後，節點的記憶體就用滿了。
+這組數值在每個節點 1.5 核心、約 3 GiB 的叢集上實測可以執行，但只夠一個帳號：第二個帳號登入並開啟 VSCodium 後，節點的記憶體就用滿了。
+
+### 保留 home 的檔案
+
+預設的 `/home` 是 `emptyDir`，不需要叢集提供儲存空間，但 **Pod 重建時所有帳號的檔案都會消失**。Pod 會重建的情況有：修改 `users.txt` 後重新套用、更換映像檔版本、刪除 Pod、節點故障或重開機。
+
+要保留檔案時，另外建一個目錄，加上 PVC（PersistentVolumeClaim，向 Kubernetes 申請一塊儲存空間）並把 `/home` 換成它：
+
+```yaml
+# my-workspace/home-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: workspace-home
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+```yaml
+# my-workspace/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: web-workspace
+resources:
+- ../manifests/workspace
+- home-pvc.yaml
+patches:
+- target: {kind: Deployment, name: workspace}
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: workspace
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: home
+            emptyDir: null
+            persistentVolumeClaim:
+              claimName: workspace-home
+```
+
+```bash
+kubectl apply -k my-workspace
+```
+
+叢集沒有預設的 StorageClass（儲存類別，決定儲存空間由誰提供；`kubectl get storageclass` 列出的名稱後面有 `(default)` 才算有）時，在 `home-pvc.yaml` 的 `spec` 加上 `storageClassName: <名稱>`，否則 PVC 和 Pod 都會停在 `Pending`。
 
 ## 環境變數
 
