@@ -95,7 +95,7 @@ rect(470,535,1380,795,'#ffffff','#6e98bf')
 text(1240,578,'rdp-firefox Pod',32)
 dashed_container(495,595,1330,720)
 text(1240,639,'container：desktop（單一 container）',27)
-text(1240,676,'ghcr.io/braveantony/rdp-firefox:3.7-share',22,'#596e85')
+text(1240,676,'ghcr.io/braveantony/rdp-firefox:3.8-share',22,'#596e85')
 rect(440,1410,1440,170,'#f8fbff','#9fb9d3')
 text(470,1455,'namespace：taroko',30)
 

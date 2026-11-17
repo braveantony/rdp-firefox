@@ -1,6 +1,6 @@
 # rdp-firefox 系統運作架構
 
-適用映像檔：`ghcr.io/braveantony/rdp-firefox:3.7-share`
+適用映像檔：`ghcr.io/braveantony/rdp-firefox:3.8-share`
 
 ![rdp-firefox 系統運作架構](architecture/rdp-firefox-architecture.png)
 

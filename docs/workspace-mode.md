@@ -1,6 +1,6 @@
 # 工作區模式
 
-適用：`3.7-share` 之後的版本（尚未發布）。
+適用映像檔：`ghcr.io/braveantony/rdp-firefox:3.8-share`。
 
 ## 一句話
 
