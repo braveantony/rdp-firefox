@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspace?ref=main"
 ```
 
-這行指令會部署到 namespace `web-workspace`（和上面的 kiosk 模式同一個，兩者可以並存）。等 Pod 變成 `3/3 Running`（第一次要下載三個映像檔，需要幾分鐘）：
+這行指令會部署到 namespace `web-workspace`（和上面的 kiosk 模式是同一個 namespace）。等 Pod 變成 `3/3 Running`（第一次要下載三個映像檔，需要幾分鐘）：
 
 ```bash
 kubectl -n web-workspace get pod -w
