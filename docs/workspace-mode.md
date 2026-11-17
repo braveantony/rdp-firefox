@@ -67,7 +67,7 @@ tkadm 視窗是一個 Firefox，開啟 `localhost:2210` 的 Web 終端機（以 
 
 | 要確認的事 | 怎麼查 | 不符合時 |
 | --- | --- | --- |
-| 有一個節點放得下整個 Pod：三個 container 合計要求 2 核心、4 GiB 記憶體 | `kubectl describe nodes`，看每個節點的 `Allocatable` | Pod 停在 `Pending`，見[節點比較小時](#節點比較小時) |
+| 有一個節點放得下整個 Pod：三個 container 合計要求 0.8 核心、2 GiB 記憶體 | `kubectl describe nodes`，看每個節點的 `Allocatable` 和已經被要求走多少（`Allocated resources`） | Pod 停在 `Pending`，見[資源與人數](#資源與人數) |
 | NodePort `30389` 沒有被占用（kiosk 模式用的也是這個埠，同一個叢集只能裝其中一種） | `kubectl get svc -A \| grep 30389` 沒有輸出 | `kubectl apply` 回報 `provided port is already allocated` |
 | tkadm 已經部署，`tkadm.taroko` 的 22100 埠連得到 | `kubectl -n taroko get pod,svc` | 桌面照常可用，但 tkadm 視窗連不上，VSCodium 也連不到 tkadm |
 
@@ -102,11 +102,15 @@ kubectl apply -k manifests/workspace
 
 `manifests/workspace/kustomization.yaml` 的 `images` 記錄一起測試過的三個版本。
 
-### 節點比較小時
+### 資源與人數
+
+預設的要求（`requests`）是 `desktop` 0.4 核心、1 GiB，`vscode` 與 `jupyter` 各 0.2 核心、512 MiB，合計 0.8 核心、2 GiB；上限（`limits`）是每個 container 4 核心、4 GiB。
 
 實測一個帳號把四個工具都開起來、沒有其他操作時，三個 container 合計用掉大約 2 GiB 記憶體（`desktop` 約 1.1 GiB，`vscode` 與 `jupyter` 各約 0.4 到 0.5 GiB）。每多一個帳號同時使用，就要再留一份。
 
-預設的要求（`requests`）是 `desktop` 1 核心、2 GiB，`vscode` 與 `jupyter` 各 0.5 核心、1 GiB。節點放不下時，不要直接改 `manifests/workspace`，另外建一個目錄，用 kustomize 的 patch 蓋掉數值：
+所以預設值只保證一個帳號夠用。在每個節點 1.5 核心、約 3 GiB 的叢集上實測可以執行，但第二個帳號登入並開啟 VSCodium 後，節點的記憶體就用滿了。
+
+要給多人同時使用時，選一個夠大的節點，並把要求調高，讓 Kubernetes 替這個 Pod 留住資源。不要直接改 `manifests/workspace`，另外建一個目錄，用 kustomize 的 patch 蓋掉數值。下面是預留兩個帳號的例子：
 
 ```yaml
 # my-workspace/kustomization.yaml
@@ -115,7 +119,6 @@ kind: Kustomization
 resources:
 - ../manifests/workspace
 patches:
-# 調低三個 container 的資源要求與上限
 - target: {kind: Deployment, name: workspace}
   patch: |
     apiVersion: apps/v1
@@ -127,18 +130,16 @@ patches:
         spec:
           containers:
           - name: desktop
-            resources: {requests: {cpu: 400m, memory: 1Gi}, limits: {cpu: 1500m, memory: 2Gi}}
+            resources: {requests: {cpu: "1", memory: 2Gi}}
           - name: vscode
-            resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 1500m, memory: 1500Mi}}
+            resources: {requests: {cpu: 500m, memory: 1Gi}}
           - name: jupyter
-            resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 1500m, memory: 1500Mi}}
+            resources: {requests: {cpu: 500m, memory: 1Gi}}
 ```
 
 ```bash
 kubectl apply -k my-workspace
 ```
-
-這組數值在每個節點 1.5 核心、約 3 GiB 的叢集上實測可以執行，但只夠一個帳號：第二個帳號登入並開啟 VSCodium 後，節點的記憶體就用滿了。
 
 ### 保留 home 的檔案
 
