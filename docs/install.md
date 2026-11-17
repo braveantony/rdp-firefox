@@ -1,6 +1,6 @@
 # 安裝 rdp-firefox
 
-本文件說明如何把 rdp-firefox 部署到 Kubernetes 叢集。登入後的使用方式見 [README 的「How It Works」](../README.md#how-it-works) 與[使用手冊](user-guide.md)。
+本文件說明如何把 rdp-firefox 部署到 Kubernetes 叢集。登入後的使用方式見[使用手冊](user-guide.md)。
 
 ## 先決條件
 
@@ -60,7 +60,7 @@ bob:Bob-pw
 
 ## 更換映像檔
 
-要換映像檔（例如無法上網的叢集改用私有 registry，或改用不含分享功能的 `:3.2`），在 `manifests/multi-user/kustomization.yaml` 取消 `images:` 區塊的註解，並設定 `newName`／`newTag`，再 `kubectl apply -k manifests/multi-user`。各版本的差異見 [README 的「Versions」](../README.md#versions)。
+要換映像檔（例如無法上網的叢集改用私有 registry，或改用不含分享功能的 `:3.2`），在 `manifests/multi-user/kustomization.yaml` 取消 `images:` 區塊的註解，並設定 `newName`／`newTag`，再 `kubectl apply -k manifests/multi-user`。各版本的差異見 [versions.md](versions.md)。
 
 ## 升級
 

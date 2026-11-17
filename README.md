@@ -17,7 +17,7 @@ rdp-firefox 讓你用 Windows 內建的遠端桌面（RDP）登入 Kubernetes �
 - **一個桌面、三個工具**（工作區模式）：tkadm、VSCodium、JupyterLab 共用一次登入，不必分別連三個遠端桌面；斷線 8 小時內重新連線，會接回原本的桌面。
 - **多人同時使用、各有桌面**（kiosk 模式）：多個帳號、甚至同一個帳號都能多人同時登入，每次登入都有自己的桌面、瀏覽器與下載目錄。
 - **桌面內可以輸入中文**：內建新酷音（注音），按左 `Shift` 切換中英；也能貼上本機複製的文字。
-- **用 PIN 分享桌面**（kiosk 模式）：把操作 PIN 或唯讀 PIN 告訴對方，對方就能一起操作或只能看。一行指令安裝的映像檔已經內建這個功能。
+- **用 PIN 分享桌面**（kiosk 模式）：把操作 PIN 或唯讀 PIN 告訴對方，對方就能一起操作或只能看。一行指令安裝的映像檔已經內建這個功能，用法見[使用手冊](docs/user-guide.md#5-分享你的桌面)。
 
 ## Quick Start
 
@@ -50,13 +50,13 @@ kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspac
 kubectl -n web-workspace get pod -w
 ```
 
-用遠端桌面連線到 `<節點 IP>:30389`，帳號 `bigred`、密碼 `bigred`。節點 IP 用 `kubectl get nodes -o wide` 查，看 `INTERNAL-IP` 欄，任一個節點都可以。連線時畫面上的步驟見[登入](#登入)。登入後是三張卡片：
+用遠端桌面連線到 `<節點 IP>:30389`，帳號 `bigred`、密碼 `bigred`。節點 IP 用 `kubectl get nodes -o wide` 查，看 `INTERNAL-IP` 欄，任一個節點都可以。連線時會先出現憑證警告和 xrdp 登入畫面，步驟見[使用手冊的「連線與登入」](docs/user-guide.md#1-連線與登入)。登入後是三張卡片：
 
 ![登入後的三張卡片](docs/images/workspace-01-home.png)
 
 tkadm 要另外部署，本 repo 不提供，見 [Known Limitations](#known-limitations)。
 
-修改帳號密碼、給多人同時使用、在 Pod 重建後保留家目錄的檔案，以及移除部署的步驟，都在 [docs/workspace-mode.md](docs/workspace-mode.md)。
+卡片和工具列怎麼用、修改帳號密碼、給多人同時使用、在 Pod 重建後保留家目錄的檔案，以及移除部署的步驟，都在 [docs/workspace-mode.md](docs/workspace-mode.md)。
 
 ### kiosk 模式（全螢幕 Firefox）
 
@@ -66,11 +66,11 @@ tkadm 要另外部署，本 repo 不提供，見 [Known Limitations](#known-limi
 curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/install.sh | bash
 ```
 
-腳本會部署到 namespace `web-workspace`，完成後印出每個節點的連線位址。用遠端桌面連線到 `<節點 IP>:30389`，帳號 `bigred`、密碼 `bigred`。連線時畫面上的步驟見[登入](#登入)。登入後是全螢幕的 Firefox：
+腳本會部署到 namespace `web-workspace`，完成後印出每個節點的連線位址。用遠端桌面連線到 `<節點 IP>:30389`，帳號 `bigred`、密碼 `bigred`。連線時會先出現憑證警告和 xrdp 登入畫面，步驟見[使用手冊的「連線與登入」](docs/user-guide.md#1-連線與登入)。登入後是全螢幕的 Firefox：
 
 ![全螢幕的 Firefox](docs/images/03-firefox.png)
 
-設定多個帳號、更換映像檔、升級與移除的步驟，都在 [docs/install.md](docs/install.md)。
+設定多個帳號、更換映像檔、升級與移除的步驟，都在 [docs/install.md](docs/install.md)。Firefox、Web 終端機、輸入中文和分享桌面怎麼用，見[使用手冊](docs/user-guide.md)。
 
 ## Configuration
 
@@ -86,7 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 | `DISCONNECTED_TIMEOUT` | `28800` | 只在工作區模式有效：斷線後桌面保留的秒數 |
 | `SSH_TARGET` | `tkadm.taroko` | `localhost:2210` 終端機的 SSH 目標。連 `tkadm.taroko` 時自動使用 22100 埠（`/etc/ssh/ssh_config.d/tkadm.conf`）；其他主機要指定埠號時寫成 `ssh://<主機>:<埠>` |
 
-在 Kubernetes 上怎麼改帳號和映像檔，kiosk 模式見 [docs/install.md](docs/install.md)，工作區模式見 [docs/workspace-mode.md](docs/workspace-mode.md)。
+在 Kubernetes 上怎麼改帳號和映像檔，kiosk 模式見 [docs/install.md](docs/install.md)，工作區模式見 [docs/workspace-mode.md](docs/workspace-mode.md)。各版本映像檔的差異見 [docs/versions.md](docs/versions.md)。
 
 ## How It Works
 
@@ -96,72 +96,15 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 
 **連線。** 使用者以 RDP 連到任一節點的 NodePort `30389`，Service 把連線轉到 Pod 的 3389 埠，由 Pod 裡的 xrdp（Linux 上的 RDP 伺服器）接手。帳號密碼通過驗證後，xrdp-sesman 啟動桌面：kiosk 模式每條連線一個，工作區模式每個帳號一個。桌面裡的程式都在叢集內執行，所以能直接連到叢集內的服務。
 
-**工作區模式。** 一個 Pod 裡有三個 container，各用自己的映像檔：`desktop`（rdp-firefox）負責 xrdp、桌面、卡片與工具列，`vscode`（rdp-vscode）執行 VSCodium，`jupyter`（rdp-jupyter）執行 JupyterLab。按下 VSCodium 或 JupyterLab 的卡片時，桌面透過 unix socket（同一台機器上的程式互相通訊用的檔案）通知對應的 container，由它以登入者的身分啟動程式，視窗直接畫在桌面上。tkadm 則是 `desktop` 自己開的 Firefox 視窗，裡面是連到 tkadm 的 Web 終端機。工具開啟後，畫面底部的工具列可以在四個工具（多了 Firefox）之間切換：
+**工作區模式。** 一個 Pod 裡有三個 container，各用自己的映像檔：`desktop`（rdp-firefox）負責 xrdp、桌面、卡片與工具列，`vscode`（rdp-vscode）執行 VSCodium，`jupyter`（rdp-jupyter）執行 JupyterLab。按下 VSCodium 或 JupyterLab 的卡片時，桌面透過 unix socket（同一台機器上的程式互相通訊用的檔案）通知對應的 container，由它以登入者的身分啟動程式，視窗直接畫在桌面上。tkadm 則是 `desktop` 自己開的 Firefox 視窗，裡面是連到 tkadm 的 Web 終端機。斷線後桌面和裡面的工具會保留 8 小時，重新連線就接回原本的桌面。
 
-![開啟 VSCodium 後的工具列](docs/images/workspace-02-toolbar.png)
+**kiosk 模式。** Pod 只有 `desktop` 一個 container。每條連線登入後，都會拿到一個全新的桌面和全螢幕的 Firefox；斷線 2 分鐘後桌面就關閉。Web 終端機（`localhost:2200`、`localhost:2210`）和分享桌面用的連線都只在 Pod 內部開放，從叢集外連不到。
 
-細節見 [docs/workspace-mode.md](docs/workspace-mode.md)。
+**Web 終端機。** 兩種模式都有。`localhost:2200` 是 bash，`localhost:2210` 以 SSH 連到 `SSH_TARGET`（預設是 tkadm），所以 kubeconfig 留在 tkadm 裡，不必帶到用戶端。
 
-**kiosk 模式。** Pod 只有 `desktop` 一個 container。它的架構圖、各個 process（執行中的程式）的職責與安全邊界，見 [docs/architecture.md](docs/architecture.md)。
+工作區模式的細節見 [docs/workspace-mode.md](docs/workspace-mode.md)。kiosk 模式的架構圖、各個 process（執行中的程式）的職責與安全邊界，見 [docs/architecture.md](docs/architecture.md)。
 
-下面是登入之後的操作方式，完整說明見[使用手冊](docs/user-guide.md)。
-
-### 登入
-
-按 `Win+R`、輸入 `mstsc`，開啟「遠端桌面連線」，連到 `<節點 IP>:30389`。出現憑證警告時按「是」（憑證是 container 啟動時自行產生的自簽憑證；即使勾了不再詢問，Pod 重建後還會再問一次）。接著會看到 xrdp 登入畫面：Session 保持 `Xorg`，輸入帳號密碼後按 OK。
-
-![xrdp 登入畫面](docs/images/01-login.png)
-
-### Firefox
-
-kiosk 模式登入後，畫面上只有全螢幕的 Firefox；工作區模式要從工具列開啟 Firefox。kiosk 模式的 Firefox 被關掉後，約 1 秒會自動重開；解析度會配合遠端桌面視窗大小調整。下載檔案時會詢問儲存位置。
-
-輸入中文：本機輸入法保持英文，在遠端桌面裡單獨按一下左 `Shift`（或 `Ctrl+Space`）切換到注音（新酷音），再按一次切回英文。也可以在本機打好後複製，再到 Firefox 按 `Ctrl+V` 貼上（Mac 用 `Cmd+V`）。
-
-在網址列輸入 `http://<service>.<namespace>` 即可開啟叢集內的 Web 服務，不必另外把該服務開放到叢集外。服務的埠號不是 80 時，在網址後加上 `:<埠號>`，例如 `http://grafana.monitoring:3000`；埠號就是 Service 的 port，可用 `kubectl get svc -n <namespace>` 查看。
-
-### Web 終端機
-
-兩種模式都有。在 Firefox 網址列輸入 `localhost:2200` 就是 bash 終端機，`localhost:2210` 則以 SSH 連到 `SSH_TARGET`（預設 `tkadm.taroko`；映像檔已預先設定好，連 tkadm 時會自動使用 22100 埠）。每個分頁都有獨立的 shell，關掉分頁就會結束。終端機只能在遠端桌面裡的 Firefox 開啟，從你自己電腦的瀏覽器連不到。
-
-- **只設定一個帳號時**：`localhost:2200` 直接以該帳號開啟 bash，分頁裡的家目錄是暫時的，關掉分頁就刪除。`localhost:2210` 以同名帳號 SSH 登入（需輸入 SSH 目標上的密碼）。
-- **設定多個帳號時**：`localhost:2200` 先出現 `login:` 提示，輸入自己的帳號密碼後才進入 bash，避免不小心以別人的身分操作。這時用的是該帳號的家目錄，同一帳號開的多個分頁共用；關掉分頁後檔案還在，Pod 重建才清空。`localhost:2210` 會先詢問要用 SSH 目標上的哪個帳號。
-
-在終端機裡貼上請按 `Ctrl+Shift+V` 或 `Shift+Insert`（Mac 上是 `Control+Shift+V`），因為 `Ctrl+V` 會被當成控制字元送進終端機。
-
-![localhost:2200 終端機](docs/images/04-terminal.png)
-
-### 分享桌面（kiosk 模式）
-
-登入約 2 秒後，畫面中央會出現這個桌面的**編號**、**操作 PIN**（可以操作）與**唯讀 PIN**（只能看）。依需要把其中一組 PIN 告訴對方即可。關掉視窗後，可按 `Ctrl+Alt+S` 再次叫出；**開始分享前請先關掉這個視窗**，以免加入者看到操作 PIN。
-
-![分享 PIN 視窗](docs/images/02-share-popup.png)
-
-對方用遠端桌面連到同一個位址，在 xrdp 登入畫面把 Session 改選 `join<編號>`（例如 `join10`），password 填 PIN，就會看到你的畫面。分享不限帳號：任何人只要拿到 PIN 都能加入。逐步說明與截圖見[使用手冊的「加入別人的桌面」](docs/user-guide.md#5-2-加入者加入別人的桌面)。
-
-### 建置與測試
-
-從零建置映像檔的步驟見 [docs/build-image-v3.4.md](docs/build-image-v3.4.md)（`:3.4` 與 `:3.4-share`）和 [docs/build-image.md](docs/build-image.md)（v3.2）。
-
-測試在 `test/` 底下：`test/e2e/` 在臨時的 kind 叢集（用容器模擬的測試用 Kubernetes 叢集）上做端對端驗證，`test/unit/` 與 `test/image/` 測工作區模式，`test/architecture/` 對已部署的叢集核對架構文件的說法。
-
-## Versions
-
-| | v3.2 | v3.4-share | v3.5-share | v3.6-share | v3.7-share | v3.8-share |
-| --- | --- | --- | --- | --- | --- | --- |
-| 映像檔 | `ghcr.io/braveantony/rdp-firefox:3.2` | `ghcr.io/braveantony/rdp-firefox:3.4-share` | `ghcr.io/braveantony/rdp-firefox:3.5-share` | `ghcr.io/braveantony/rdp-firefox:3.6-share` | `ghcr.io/braveantony/rdp-firefox:3.7-share` | `ghcr.io/braveantony/rdp-firefox:3.8-share` |
-| 同一帳號多人同時登入、各自獨立桌面 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| localhost:2200／2210 Web 終端機 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 分享自己的桌面（操作 PIN／唯讀 PIN） | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 多個帳號（Secret 帳號檔案） | — | — | ✅ | ✅ | ✅ | ✅ |
-| `curl \| bash` 安裝、Kustomize 部署 | — | — | ✅ | ✅ | ✅ | ✅ |
-| 桌面內直接輸入中文（新酷音） | — | — | — | ✅ | ✅ | ✅ |
-| 2210 免設定直連 tkadm（22100 埠）、設定多個帳號時詢問 SSH 帳號 | — | — | — | — | ✅ | ✅ |
-| [工作區模式](docs/workspace-mode.md)（`RDP_MODE=workspace`） | — | — | — | — | — | ✅ |
-| 映像檔大小 | 約 790 MB | 約 1.04 GB | 約 1.04 GB | 約 1.08 GB | 約 1.08 GB | 約 1.12 GB |
-| 原始碼 | branch [`release/3.2`](../../tree/release/3.2) | branch [`release/3.4-share`](../../tree/release/3.4-share) | branch [`release/3.5-share`](../../tree/release/3.5-share) | branch [`release/3.6-share`](../../tree/release/3.6-share) | branch [`release/3.7-share`](../../tree/release/3.7-share) | branch [`release/3.8-share`](../../tree/release/3.8-share) |
-
-名稱帶 `-share` 的映像檔內建分享桌面的功能，一行指令安裝的就是 `3.8-share`。`images/rdp-firefox/Dockerfile` 用建置參數 `SESSION_SHARE` 區分：`SESSION_SHARE=1` 建出 `-share` 版；`SESSION_SHARE=0`（預設）建出不含分享功能的版本（此版本未另外發布映像檔）。各版本的差異說明見 [Releases](../../releases)。
+從零建置映像檔的步驟見 [docs/build-image-v3.4.md](docs/build-image-v3.4.md) 和 [docs/build-image.md](docs/build-image.md)；測試在 `test/` 底下，工作區模式的測試怎麼執行見 [docs/workspace-mode.md 的「測試」](docs/workspace-mode.md#測試)。
 
 ## Known Limitations
 
