@@ -75,6 +75,14 @@ tkadm 要另外部署，本 repo 不提供。VSCodium 要連到 tkadm，tkadm �
 
 ### 部署步驟
 
+只是想試用時，一行指令就能裝，帳號是預設的 `alice`／`ChangeMe-alice`、`bob`／`ChangeMe-bob`：
+
+```bash
+kubectl apply -k "https://github.com/braveantony/rdp-firefox//manifests/workspace?ref=main"
+```
+
+預設密碼是公開的。要用自己的帳號密碼時，把 repo 抓下來改：
+
 ```bash
 git clone https://github.com/braveantony/rdp-firefox.git
 cd rdp-firefox
@@ -82,7 +90,9 @@ nano manifests/workspace/users.txt      # 一行一個「帳號:密碼」
 kubectl apply -k manifests/workspace
 ```
 
-連線位址是任一節點的 IP 加上 NodePort（Kubernetes 在每個節點上開放的固定埠號）`30392`。節點 IP 用 `kubectl get nodes -o wide` 查。
+連線位址是任一節點的 IP 加上 NodePort（Kubernetes 在每個節點上開放的固定埠號）`30392`。節點 IP 用 `kubectl get nodes -o wide` 查。Pod 要先變成 `3/3 Running`，用 `kubectl -n web-workspace get pod` 查。
+
+移除時執行 `kubectl delete namespace web-workspace`。這會刪除 namespace 裡的所有資源，包含 `/home` 的資料（PVC `workspace-home`）；kiosk 模式也裝在同一個 namespace，會一起被刪除。
 
 三個 container 必須：
 
