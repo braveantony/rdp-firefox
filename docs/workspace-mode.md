@@ -63,6 +63,18 @@ tkadm 視窗是一個 Firefox，開啟 `localhost:2210` 的 Web 終端機（以 
 
 ## 部署
 
+### 部署前先確認
+
+| 要確認的事 | 怎麼查 | 不符合時 |
+| --- | --- | --- |
+| 有一個節點放得下整個 Pod：三個 container 合計要求 2 核心、4 GiB 記憶體 | `kubectl describe nodes`，看每個節點的 `Allocatable` | Pod 停在 `Pending`，見[節點比較小時](#節點比較小時) |
+| 叢集有預設的 StorageClass（儲存類別，決定儲存空間由誰提供） | `kubectl get storageclass`，名稱後面有 `(default)` | PVC 和 Pod 都停在 `Pending`，見[節點比較小時](#節點比較小時)的範例 |
+| tkadm 已經部署，`tkadm.taroko` 的 22100 埠連得到 | `kubectl -n taroko get pod,svc` | 桌面照常可用，但 tkadm 視窗連不上，VSCodium 也連不到 tkadm |
+
+tkadm 要另外部署，本 repo 不提供。VSCodium 要連到 tkadm，tkadm 的 sshd 還得允許埠轉發，見 rdp-vscode 的 README。
+
+### 部署步驟
+
 ```bash
 git clone https://github.com/braveantony/rdp-firefox.git
 cd rdp-firefox
@@ -79,6 +91,50 @@ kubectl apply -k manifests/workspace
 - **掛載同一個 `/run/rdp-workspace`**。
 
 `manifests/workspace/kustomization.yaml` 的 `images` 記錄一起測試過的三個版本。
+
+### 節點比較小時
+
+實測一個帳號把四個工具都開起來、沒有其他操作時，三個 container 合計用掉大約 2 GiB 記憶體（`desktop` 約 1.1 GiB，`vscode` 與 `jupyter` 各約 0.4 到 0.5 GiB）。每多一個帳號同時使用，就要再留一份。
+
+預設的要求（`requests`）是 `desktop` 1 核心、2 GiB，`vscode` 與 `jupyter` 各 0.5 核心、1 GiB。節點放不下時，不要直接改 `manifests/workspace`，另外建一個目錄，用 kustomize 的 patch 蓋掉數值：
+
+```yaml
+# my-workspace/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../manifests/workspace
+patches:
+# 叢集沒有預設的 StorageClass 時，指定要用哪一個
+- target: {kind: PersistentVolumeClaim, name: workspace-home}
+  patch: |
+    - op: add
+      path: /spec/storageClassName
+      value: local-path
+# 調低三個 container 的資源要求與上限
+- target: {kind: Deployment, name: workspace}
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: workspace
+    spec:
+      template:
+        spec:
+          containers:
+          - name: desktop
+            resources: {requests: {cpu: 400m, memory: 1Gi}, limits: {cpu: 1500m, memory: 2Gi}}
+          - name: vscode
+            resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 1500m, memory: 1500Mi}}
+          - name: jupyter
+            resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 1500m, memory: 1500Mi}}
+```
+
+```bash
+kubectl apply -k my-workspace
+```
+
+`local-path` 換成 `kubectl get storageclass` 列出的名稱。這組數值在每個節點 1.5 核心、約 3 GiB 的叢集上實測可以執行，但只夠一個帳號：第二個帳號登入並開啟 VSCodium 後，節點的記憶體就用滿了。
 
 ## 環境變數
 
