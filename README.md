@@ -106,6 +106,7 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 - [install.md](docs/install.md)：安裝（先決條件、快速開始、多個帳號、更換映像檔、升級、移除）
 - [architecture.md](docs/architecture.md)：系統運作架構（連線路徑、Pod 內各 process 的職責、安全邊界）
 - [user-guide.md](docs/user-guide.md)：使用手冊（連線登入、Firefox 與中文、終端機、多人使用、分享與加入桌面、常見問題）
+- [workspace-mode.md](docs/workspace-mode.md)：工作區模式（一個桌面開啟 tkadm、VSCodium、JupyterLab；尚未發布）
 - [build-image-v3.4.md](docs/build-image-v3.4.md)：從零建置 `:3.4` 與 `:3.4-share`，並部署到 Kubernetes（tk8s）的完整步驟
 - [build-image.md](docs/build-image.md)：v3.2（只有多人獨立桌面，沒有分享功能）的建置步驟
 
@@ -117,6 +118,8 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 | `RDP_USER` | `bigred` | 沒有帳號檔案時的登入帳號（UID 1000） |
 | `RDP_PASSWORD` | — | 沒有帳號檔案時的登入密碼（此時必填） |
 | `MAX_SESSIONS` | `4` | 可同時存在的桌面數上限；加入別人桌面的連線不占名額。`-share` 版只能分享編號 10～19 的桌面，設超過 10 時，多出來的桌面無法分享 |
+| `RDP_MODE` | `kiosk` | `kiosk`：登入後是全螢幕的 Firefox；`workspace`：[工作區模式](docs/workspace-mode.md)（尚未發布） |
+| `DISCONNECTED_TIMEOUT` | `28800` | 只在工作區模式有效：斷線後桌面保留的秒數 |
 | `SSH_TARGET` | `tkadm.taroko` | `localhost:2210` 終端機的 SSH 目標。連 `tkadm.taroko` 時自動使用 22100 埠（`/etc/ssh/ssh_config.d/tkadm.conf`）；其他主機要指定埠號時寫成 `ssh://<主機>:<埠>` |
 
 ## 檔案
@@ -130,8 +133,10 @@ curl -fsSL https://raw.githubusercontent.com/braveantony/rdp-firefox/main/instal
 | `install.sh` | 快速開始的 `curl \| bash` 安裝腳本（帳號 bigred/bigred） |
 | `manifests/base/` | Kustomize base（共用的基本設定）：Namespace、Deployment、NodePort Service（30389） |
 | `manifests/multi-user/` | 多帳號 overlay（疊加在 base 上的修改）：由 `users.txt` 帳號清單產生 Secret |
+| `manifests/workspace/` | 工作區模式：一個 Pod 三個 container（rdp-firefox、rdp-vscode、rdp-jupyter），NodePort Service（30392） |
 | `docs/` | 架構說明、使用手冊、建置文件、架構圖（`docs/architecture/`）與 README 截圖（`docs/images/`） |
 | `test/e2e/` | 在臨時 kind 叢集（用容器模擬的測試用 Kubernetes 叢集）上執行的端到端驗證腳本 |
+| `test/unit/`、`test/image/` | 工作區模式的測試：程式邏輯，以及在 podman pod 裡實際登入操作 |
 | `test/architecture/` | 對已部署的叢集核對[架構文件](docs/architecture.md)說法的驗證腳本 |
 
 ## 授權
