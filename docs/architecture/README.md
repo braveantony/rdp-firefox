@@ -5,6 +5,8 @@
 - `rdp-firefox-architecture.png`：1960 × 1740 PNG。
 - `rdp-firefox-architecture.svg`：可編輯的 SVG，文字使用繁體中文。
 - `render.py`：產生上述兩個檔案的原始碼；只需要 Python 3 標準函式庫、系統的 libfreetype 與中文字型。
+- `workspace-architecture.png`、`workspace-architecture.svg`：[工作區模式](../workspace-mode.md)的架構圖，1440 × 960。
+- `render-workspace.py`：產生 `workspace-architecture.svg`，只需要 Python 3 標準函式庫，執行 `python3 docs/architecture/render-workspace.py`。PNG 是用瀏覽器開啟 SVG 後截圖得到的，截圖的環境要有中文字型。
 
 重製方式：
 

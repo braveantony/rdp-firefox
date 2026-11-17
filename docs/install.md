@@ -1,6 +1,6 @@
 # 安裝 rdp-firefox
 
-本文件說明如何把 rdp-firefox 部署到 Kubernetes 叢集。登入後的使用方式見 [README 的「怎麼用」](../README.md#怎麼用) 與[使用手冊](user-guide.md)。
+本文件說明如何把 rdp-firefox 部署到 Kubernetes 叢集。登入後的使用方式見[使用手冊](user-guide.md)。
 
 ## 先決條件
 
@@ -11,7 +11,7 @@
 - 節點能連到 `ghcr.io` 下載映像檔（約 1 GB）；無法上網的叢集請改用私有 registry（存放映像檔的伺服器，需先把映像檔推進去，見[更換映像檔](#更換映像檔)）
 - 資源：Pod 需求 1 CPU／2 GiB，上限 4 CPU／4 GiB
 - NodePort `30389` 未被占用，且用戶端連得到節點的 TCP 30389 埠（防火牆要放行）
-- `localhost:2210` 預設連到 namespace `taroko` 的叢集管理 Pod tkadm（裡面已備好 kubectl 與 kubeconfig）。tkadm 需另外部署，本 repo 不提供；沒有 tkadm 時 2210 無法使用，可用環境變數 `SSH_TARGET` 改連其他主機（見 [README 的「環境變數」](../README.md#環境變數)）
+- `localhost:2210` 預設連到 namespace `taroko` 的叢集管理 Pod tkadm（裡面已備好 kubectl 與 kubeconfig）。tkadm 需另外部署，本 repo 不提供；沒有 tkadm 時 2210 無法使用，可用環境變數 `SSH_TARGET` 改連其他主機（見 [README 的「Configuration」](../README.md#configuration)）
 
 ### 遠端桌面用戶端
 
@@ -60,7 +60,7 @@ bob:Bob-pw
 
 ## 更換映像檔
 
-要換映像檔（例如無法上網的叢集改用私有 registry，或改用不含分享功能的 `:3.2`），在 `manifests/multi-user/kustomization.yaml` 取消 `images:` 區塊的註解，並設定 `newName`／`newTag`，再 `kubectl apply -k manifests/multi-user`。各版本的差異見 [README 的「版本比較」](../README.md#版本比較)。
+要換映像檔（例如無法上網的叢集改用私有 registry，或改用不含分享功能的 `:3.2`），在 `manifests/multi-user/kustomization.yaml` 取消 `images:` 區塊的註解，並設定 `newName`／`newTag`，再 `kubectl apply -k manifests/multi-user`。各版本的差異見 [versions.md](versions.md)。
 
 ## 升級
 
