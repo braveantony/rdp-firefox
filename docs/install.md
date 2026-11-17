@@ -1,6 +1,6 @@
 # 安裝 rdp-firefox
 
-本文件說明如何把 rdp-firefox 部署到 Kubernetes 叢集。登入後的使用方式見 [README 的「怎麼用」](../README.md#怎麼用) 與[使用手冊](user-guide.md)。
+本文件說明如何把 rdp-firefox 部署到 Kubernetes 叢集。登入後的使用方式見 [README 的「How It Works」](../README.md#how-it-works) 與[使用手冊](user-guide.md)。
 
 ## 先決條件
 
