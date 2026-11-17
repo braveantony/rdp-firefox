@@ -25,6 +25,10 @@ rm -rf "$S"
 # logged in to the same pod (mkdir -p would leave $S itself world-readable)
 umask 077
 mkdir -m 700 "$S"
+if [ "$(cat /run/rdp-mode 2>/dev/null)" = workspace ]; then
+  . /opt/desktop/workspace/session.sh
+  exit 0
+fi
 mkdir -m 700 "$S/home" "$S/run"
 cp -R /etc/skel/. "$S/home"/
 export HOME="$S/home" XDG_RUNTIME_DIR="$S/run"

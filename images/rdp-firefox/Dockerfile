@@ -6,6 +6,7 @@ LABEL org.opencontainers.image.source="https://github.com/braveantony/rdp-firefo
       org.opencontainers.image.licenses="MIT"
 
 # xrdp + xorgxrdp: every RDP login gets its own Xorg (xrdpdev driver), no VNC
+# python3, py3-gobject3, libwnck3, xprop: the workspace-mode desktop (RDP_MODE=workspace)
 RUN apk add --no-cache \
       xrdp xorgxrdp xorg-server xinit \
       openbox firefox \
@@ -15,6 +16,7 @@ RUN apk add --no-cache \
       fcitx5 fcitx5-chewing fcitx5-gtk3 \
       ttyd bash nano openssh-client openssl \
       tini tzdata musl-locales \
+      python3 py3-gobject3 libwnck3 xprop \
  && fc-cache -f \
  && dbus-uuidgen > /etc/machine-id \
  && mkdir -p -m 1777 /tmp/.X11-unix \

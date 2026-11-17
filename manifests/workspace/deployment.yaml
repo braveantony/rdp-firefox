@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workspace
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # every desktop lives in this one pod, and the home volume is ReadWriteOnce
+  selector:
+    matchLabels:
+      app: workspace
+  template:
+    metadata:
+      labels:
+        app: workspace
+    spec:
+      containers:
+      # The only container users connect to: xrdp, the home screen and the toolbar.
+      # Runs as root: xrdp-sesman needs PAM and setuid to the login accounts.
+      - name: desktop
+        image: ghcr.io/braveantony/rdp-firefox
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+        - name: RDP_MODE
+          value: workspace
+        - name: USERS_FILE            # 三個 container 讀同一份帳號檔案，UID 才會一致
+          value: /etc/workspace/users
+        - name: MAX_SESSIONS          # 同時存在的桌面數上限；一個帳號一個桌面
+          value: "4"
+        - name: DISCONNECTED_TIMEOUT  # 斷線後桌面保留的秒數
+          value: "28800"
+        - name: SSH_TARGET            # tkadm 視窗的 SSH 目標
+          value: "tkadm.taroko"
+        ports:
+        - name: rdp
+          containerPort: 3389
+        readinessProbe:
+          tcpSocket:
+            port: rdp
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: rdp
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+        volumeMounts: &mounts
+        - name: users
+          mountPath: /etc/workspace
+          readOnly: true
+        - name: home
+          mountPath: /home
+        - name: run
+          mountPath: /run/rdp-workspace
+        - name: dshm
+          mountPath: /dev/shm
+      # No xrdp here: VSCodium starts when the desktop asks, and draws on its display.
+      # Runs as root: the launcher switches to the account that asked.
+      - name: vscode
+        image: ghcr.io/braveantony/rdp-vscode
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+        - name: RDP_MODE
+          value: attached
+        - name: USERS_FILE
+          value: /etc/workspace/users
+        resources:
+          requests:
+            cpu: 500m
+            memory: "1Gi"
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+        volumeMounts: *mounts
+      - name: jupyter
+        image: ghcr.io/braveantony/rdp-jupyter
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+        - name: RDP_MODE
+          value: attached
+        - name: USERS_FILE
+          value: /etc/workspace/users
+        resources:
+          requests:
+            cpu: 500m
+            memory: "1Gi"
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+        volumeMounts: *mounts
+      volumes:
+      - name: users            # 帳號清單：一行一個「帳號:密碼」
+        secret:
+          secretName: workspace-users
+          defaultMode: 0400
+      - name: home
+        persistentVolumeClaim:
+          claimName: workspace-home
+      - name: run              # 啟動服務的 socket；Pod 重啟就清空
+        emptyDir: {}
+      - name: dshm             # 預設 /dev/shm 只有 64MiB，Firefox 與 VSCodium 會崩潰
+        emptyDir:
+          medium: Memory
+          sizeLimit: 2Gi

@@ -1,0 +1,25 @@
+# Workspace: one Pod with three containers (desktop, vscode, jupyter) and one xrdp.
+#   edit users.txt, then: kubectl apply -k manifests/workspace
+# The Secret name gets a content hash, so changing users.txt rolls the pod.
+# See docs/workspace-mode.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: web-workspace
+resources:
+- namespace.yaml
+- pvc.yaml
+- deployment.yaml
+- service.yaml
+secretGenerator:
+- name: workspace-users
+  files:
+  - users=users.txt
+# The three image versions that were tested together. None of them is released
+# yet: workspace mode and attached mode are still in review.
+images:
+- name: ghcr.io/braveantony/rdp-firefox
+  newTag: "3.8"
+- name: ghcr.io/braveantony/rdp-vscode
+  newTag: "1.5"
+- name: ghcr.io/braveantony/rdp-jupyter
+  newTag: "0.2"

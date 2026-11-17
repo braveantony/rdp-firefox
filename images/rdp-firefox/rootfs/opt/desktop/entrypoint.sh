@@ -5,6 +5,19 @@ set -eu
 USERS_FILE="${USERS_FILE:-/etc/firefox-rdp/users}"
 MAX_SESSIONS="${MAX_SESSIONS:-4}"
 SSH_TARGET="${SSH_TARGET:-tkadm.taroko}"
+# RDP_MODE=kiosk (default): every login gets a full-screen Firefox of its own.
+# RDP_MODE=workspace: every account gets one desktop with cards for tkadm,
+#   VSCodium and JupyterLab; the last two run in other containers of the pod
+#   (rdp-vscode / rdp-jupyter with RDP_MODE=attached) and draw on this desktop.
+RDP_MODE="${RDP_MODE:-kiosk}"
+DISCONNECTED_TIMEOUT="${DISCONNECTED_TIMEOUT:-28800}"
+case "$RDP_MODE" in
+  kiosk|workspace) ;;
+  *) echo "[entrypoint] invalid RDP_MODE: $RDP_MODE (use kiosk or workspace)" >&2; exit 1 ;;
+esac
+case "$DISCONNECTED_TIMEOUT" in
+  ''|*[!0-9]*) echo "[entrypoint] invalid DISCONNECTED_TIMEOUT: $DISCONNECTED_TIMEOUT" >&2; exit 1 ;;
+esac
 
 # Login accounts: one "user:password" per line in $USERS_FILE (mounted from a
 # Secret; blank lines and # comments ignored), or a single RDP_USER/RDP_PASSWORD
@@ -70,6 +83,19 @@ case "$MAX_SESSIONS" in
   ''|*[!0-9]*) echo "[entrypoint] invalid MAX_SESSIONS: $MAX_SESSIONS" >&2; exit 1 ;;
 esac
 sed -i "s/^MaxSessions=.*/MaxSessions=${MAX_SESSIONS}/" /etc/xrdp/sesman.ini
+# startwm.sh runs with the environment sesman builds, so it reads the mode here
+echo "$RDP_MODE" > /run/rdp-mode
+if [ "$RDP_MODE" = workspace ]; then
+  # One desktop per account that a reconnect gets back (Policy=Default); a
+  # desktop nobody is connected to is closed after DISCONNECTED_TIMEOUT seconds
+  sed -i -e 's/^Policy=.*/Policy=Default/' \
+         -e "s/^DisconnectedTimeLimit=.*/DisconnectedTimeLimit=${DISCONNECTED_TIMEOUT}/" /etc/xrdp/sesman.ini
+  # Homes hold each account's own files and are shared with the attached
+  # containers; adduser leaves them readable by every account
+  for user in "$@"; do chmod 700 "/home/$user"; done
+  # The attached containers put their launcher sockets here (a shared volume)
+  install -d -m 755 /run/rdp-workspace
+fi
 
 xrdp-sesman --nodaemon &
 xrdp --nodaemon &
